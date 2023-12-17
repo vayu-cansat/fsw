@@ -29,7 +29,7 @@ void start_comms()
 
 void process(String cmd)
 {
-    Serial.println("Processing command: " + cmd);
+    // Serial.println("Processing command: " + cmd);
     if (cmd == "ACK")
     {
         debug_message = "";
@@ -45,7 +45,7 @@ void process(String cmd)
 
 void process(String cmd, String args)
 {
-    Serial.println("Processing command: " + cmd + " " + args);
+    // Serial.println("Processing command: " + cmd + " " + args);
     // CMD,XXXX,CX,ON
     if (cmd == "CX")
     {
