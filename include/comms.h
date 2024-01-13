@@ -1,11 +1,19 @@
 #pragma once
 #include <Arduino.h>
 #include "variables.h"
-#include "imu.h"
+// #include "imu.h"
+#include <XBee.h>
 
 long int prev_millis;
 int offset = 0;
 bool rst = false;
+
+#define SH 0x13a200
+#define SL 0x41f450c4
+
+XBee xbee = XBee();
+XBeeAddress64 addr64 = XBeeAddress64(SH, SL);
+ZBTxStatusResponse txStatus = ZBTxStatusResponse();
 
 String make_data_str()
 {
@@ -19,6 +27,14 @@ void comms_setup()
 {
     Serial.begin(9600);
     Serial.setTimeout(200);
+    Serial1.begin(9600);
+    xbee.setSerial(Serial1);
+    delay(3000);
+    // UPLOAD CODE
+    // REMOVE RXTX
+    // RESET XBEE
+    // CONNECT RXTX
+    // WORKS!
 }
 
 void start_comms()
@@ -37,7 +53,7 @@ void process(String cmd)
     }
     if (cmd == "CAL")
     {
-        imu_calibrate();
+        // imu_calibrate();
         debug_message = "IMU CALIBRATED";
         cmd_echo = cmd;
     }
@@ -175,6 +191,33 @@ void comms_loop()
             packet_counter++;
             String dd = make_data_str();
             Serial.println(dd);
+
+            uint8_t payload[dd.length()] = {};
+            dd.getBytes(payload, dd.length());
+
+            ZBTxRequest zbTx = ZBTxRequest(addr64, payload, sizeof(payload));
+            xbee.send(zbTx);
+
+            // wait for tx status response
+            xbee.readPacket();
+            if (xbee.getResponse().isAvailable())
+            {
+                if (xbee.getResponse().getApiId() == ZB_TX_STATUS_RESPONSE)
+                {
+                    xbee.getResponse().getZBTxStatusResponse(txStatus);
+                    if (txStatus.getDeliveryStatus() == SUCCESS)
+                    {
+                        // success
+                        Serial.println("SUCCESS");
+                    }
+                    else
+                    {
+                        // error
+                        Serial.println("ERROR");
+                    }
+                }
+            }
+
             // debug_message = "";
 
             /// DEBUG INTERVALS ///

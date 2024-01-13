@@ -9,7 +9,7 @@ void setup()
   comms_setup();
 
 #ifdef IMU_ACTIVE
-  imu_setup();
+  // imu_setup();
 #endif
   start_comms();
 }
@@ -18,7 +18,7 @@ void loop()
 {
 
 #ifdef IMU_ACTIVE
-  imu_loop();
+  // imu_loop();
 #endif
 
   comms_loop();
