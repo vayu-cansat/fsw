@@ -2,18 +2,20 @@
 #include <Arduino.h>
 #include "variables.h"
 // #include "imu.h"
-#include <XBee.h>
+// #include <XBee.h>
 
 long int prev_millis;
 int offset = 0;
 bool rst = false;
 
-#define SH 0x13a200
-#define SL 0x41f450c4
+// #define SH 0x0013a200
+// #define SL 0x41f450c4
 
-XBee xbee = XBee();
-XBeeAddress64 addr64 = XBeeAddress64(SH, SL);
-ZBTxStatusResponse txStatus = ZBTxStatusResponse();
+// XBee xbee = XBee();
+// XBeeAddress64 addr64 = XBeeAddress64(SH, SL);
+// ZBTxStatusResponse txStatus = ZBTxStatusResponse();
+// ZBRxResponse rx = ZBRxResponse();
+// ModemStatusResponse msr = ModemStatusResponse();
 
 String make_data_str()
 {
@@ -25,16 +27,26 @@ String make_data_str()
 
 void comms_setup()
 {
+    _gpio_init(25);
+    gpio_set_dir(25, GPIO_OUT);
+
+    gpio_put(25, 1);
+    delay(250);
+    gpio_put(25, 0);
+
     Serial.begin(9600);
     Serial.setTimeout(200);
+    delay(10000);
     Serial1.begin(9600);
-    xbee.setSerial(Serial1);
-    delay(3000);
-    // UPLOAD CODE
-    // REMOVE RXTX
-    // RESET XBEE
-    // CONNECT RXTX
-    // WORKS!
+    Serial1.setTimeout(200);
+
+    // xbee.setSerial(Serial1);
+    // DISCONNECT BOTH RXTX PINS FROM XBEE
+    // RESET BOTH XBEE
+    // WAIT FOR GCS XBEE RSSI GREEN LED
+    // CONNECT GCS RXTX
+    // CONNECT CANSAT RXTX
+    // BOOM! TELEMETRY WORKING
 }
 
 void start_comms()
@@ -62,7 +74,7 @@ void process(String cmd)
 void process(String cmd, String args)
 {
     // Serial.println("Processing command: " + cmd + " " + args);
-    // CMD,XXXX,CX,ON
+    // CMD,2117,CX,OFF
     if (cmd == "CX")
     {
         if (args == "ON")
@@ -158,9 +170,9 @@ void comms_loop()
 {
     // check for incoming commands
     // Incoming CMD format: CMD,XXXX,CMD_NAME,ARGS
-    if (Serial.available() > 0)
+    if (Serial1.available() > 0)
     {
-        cmd = Serial.readStringUntil('\n');
+        cmd = Serial1.readStringUntil('\n');
         if (cmd.startsWith("CMD"))
         {
             cmd = cmd.substring(9, cmd.length()); // remove CMD,XXXX,
@@ -186,48 +198,14 @@ void comms_loop()
     int interval = millis() - prev_millis;
     if (interval > (rate - abs(offset)))
     {
+        String dd = make_data_str() + "\n";
+        Serial.println(dd);
         if (telemetry)
         {
+            gpio_put(25, 1);
             packet_counter++;
-            String dd = make_data_str();
-            Serial.println(dd);
-
-            uint8_t payload[dd.length()] = {};
-            dd.getBytes(payload, dd.length());
-
-            ZBTxRequest zbTx = ZBTxRequest(addr64, payload, sizeof(payload));
-            xbee.send(zbTx);
-
-            // wait for tx status response
-            xbee.readPacket();
-            if (xbee.getResponse().isAvailable())
-            {
-                if (xbee.getResponse().getApiId() == ZB_TX_STATUS_RESPONSE)
-                {
-                    xbee.getResponse().getZBTxStatusResponse(txStatus);
-                    if (txStatus.getDeliveryStatus() == SUCCESS)
-                    {
-                        // success
-                        Serial.println("SUCCESS");
-                    }
-                    else
-                    {
-                        // error
-                        Serial.println("ERROR");
-                    }
-                }
-            }
-
-            // debug_message = "";
-
-            /// DEBUG INTERVALS ///
-            // Serial.print(packet_counter);
-            // Serial.print(" ");
-            // Serial.print(interval);
-            // Serial.print(" ");
-            // Serial.print(offset);
-            // Serial.print(" ");
-            // Serial.println(millis());
+            Serial1.println(dd);
+            gpio_put(25, 0);
         }
         prev_millis = millis();
         offset = prev_millis % rate;
