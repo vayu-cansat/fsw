@@ -8,8 +8,8 @@
 | --------- | ------------ |
 | 3.3V      | (36) 3V3 OUT |
 | GND       | (38) GND     |
-| DOUT (TX) | (2) GP1      |
 | DIN (RX)  | (1) GP0      |
+| DOUT (TX) | (2) GP1      |
 | RST       |              |
 
 **Makeshift workaround for XBEE connection**
