@@ -23,3 +23,12 @@
 | GND  | (38) GND     |
 | SDA  | (6) GP4      |
 | SCL  | (7) GP5      |
+
+### MPU
+
+| MPU  | Pico         |
+| ---- | ------------ |
+| 3.3V | (36) 3V3 OUT |
+| GND  | (38) GND     |
+| SDA  | (6) GP4      |
+| SCL  | (7) GP5      |
