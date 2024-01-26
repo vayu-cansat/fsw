@@ -1,27 +1,24 @@
 #include <Arduino.h>
 #include "variables.h"
-#include "comms.h"
 #include "subsystems.h"
-#include "rtc.h"
-#include "imu.h"
+#include <Wire.h>
 
 void setup()
 {
+  Wire.begin();
   comms_setup();
-
-#ifdef IMU_ACTIVE
-  // imu_setup();
-#endif
-  start_comms();
+  bmp_setup();
+  imu_setup();
   rtc_setup();
+  gps_setup();
+  start_comms();
 }
 
 void loop()
 {
-
-#ifdef IMU_ACTIVE
-  // imu_loop();
-#endif
+  imu_loop();
   rtc_loop();
+  gps_loop();
+  bmp_loop();
   comms_loop();
 }

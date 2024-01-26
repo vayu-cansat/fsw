@@ -1,28 +1,50 @@
 #pragma once
 #include <Arduino.h>
 #include "variables.h"
-// #include "imu.h"
-// #include <XBee.h>
 
 long int prev_millis;
 int offset = 0;
 bool rst = false;
 
-// #define SH 0x0013a200
-// #define SL 0x41f450c4
-
-// XBee xbee = XBee();
-// XBeeAddress64 addr64 = XBeeAddress64(SH, SL);
-// ZBTxStatusResponse txStatus = ZBTxStatusResponse();
-// ZBRxResponse rx = ZBRxResponse();
-// ModemStatusResponse msr = ModemStatusResponse();
-
 String make_data_str()
 {
-    gps_time = (String)millis();
     optional_data = debug_message;
-    String d = "" + team_id + "," + mission_time + "," + packet_counter + "," + mode + "," + state + "," + altitude + "," + air_speed + "," + hs_deployed + "," + pc_deployed + "," + temperature + "," + voltage + "," + pressure + "," + gps_time + "," + gps_altitude + "," + gps_latitude + "," + gps_longitude + "," + gps_stats + "," + tilt_x + "," + tilt_y + "," + rot_z + "," + cmd_echo + ",," + optional_data;
+    String d = "" + team_id + "," + mission_time + "," + packet_counter + "," + mode + "," + state + "," + altitude + "," + air_speed + "," + hs_deployed + "," + pc_deployed + "," + temperature + "," + voltage + "," + pressure + "," + gps_time + "," + gps_altitude + "," + gps_latitude + "," + gps_longitude + "," + gps_sats + "," + tilt_x + "," + tilt_y + "," + rot_z + "," + cmd_echo + ",," + optional_data;
     return d;
+}
+
+String make_debug_str()
+{
+    String d = "";
+    d += "TEAM    : " + team_id + "\n";
+    d += "MTime   : " + mission_time + "\n";
+    d += "PCOUNT  : " + (String)packet_counter + "\n";
+    d += "MODE    : " + mode + "\n";
+    d += "STATE   : " + state + "\n";
+    d += "ALTI    : " + (String)altitude + "\n";
+    d += "AIR SPD : " + (String)air_speed + "\n";
+    d += "HS DEPL : " + hs_deployed + "\n";
+    d += "PC DEPL : " + pc_deployed + "\n";
+    d += "TEMP    : " + (String)temperature + "\n";
+    d += "VOLT    : " + (String)voltage + "\n";
+    d += "PRSS    : " + (String)pressure + "\n";
+    d += "GPS TIME: " + gps_time + "\n";
+    d += "GPS ALTI: " + (String)gps_altitude + "\n";
+    d += "GPS LATI: " + (String)gps_latitude + "\n";
+    d += "GPS LONG: " + (String)gps_longitude + "\n";
+    d += "GPS SATS: " + (String)gps_sats + "\n";
+    d += "TILTX   : " + (String)tilt_x + "\n";
+    d += "TILTY   : " + (String)tilt_y + "\n";
+    d += "ROTZ    : " + (String)rot_z + "\n";
+    d += "CMD     : " + cmd_echo + "\n";
+    d += "OPT DATA: " + optional_data + "\n";
+    return d;
+}
+
+void start_comms()
+{
+    telemetry = true;
+    prev_millis = millis();
 }
 
 void comms_setup()
@@ -40,19 +62,12 @@ void comms_setup()
     Serial1.begin(9600);
     Serial1.setTimeout(200);
 
-    // xbee.setSerial(Serial1);
     // DISCONNECT BOTH RXTX PINS FROM XBEE
     // RESET BOTH XBEE
     // WAIT FOR GCS XBEE RSSI GREEN LED
     // CONNECT GCS RXTX
     // CONNECT CANSAT RXTX
     // BOOM! TELEMETRY WORKING
-}
-
-void start_comms()
-{
-    telemetry = true;
-    prev_millis = millis();
 }
 
 void process(String cmd)
@@ -200,6 +215,8 @@ void comms_loop()
     {
         String dd = make_data_str() + "\n";
         Serial.println(dd);
+        Serial.println(make_debug_str());
+#ifdef COM_ACTIVE
         if (telemetry)
         {
             gpio_put(25, 1);
@@ -207,6 +224,7 @@ void comms_loop()
             Serial1.println(dd);
             gpio_put(25, 0);
         }
+#endif
         prev_millis = millis();
         offset = prev_millis % rate;
     }
