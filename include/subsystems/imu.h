@@ -1,15 +1,14 @@
 #pragma once
 #include <Arduino.h>
 #include "variables.h"
-#include <Adafruit_MPU6050.h>
-#include <Adafruit_Sensor.h>
+#include <MPU6050_tockn.h>
 
-Adafruit_MPU6050 mpu;
+MPU6050 mpu(Wire);
 
 void imu_setup()
 {
 #ifdef IMU_ACTIVE
-    if (!mpu.begin(0x69))
+    if (!mpu.begin())
     {
         Serial.println("❌ MPU6050");
     }
@@ -23,11 +22,16 @@ void imu_setup()
 void imu_loop()
 {
 #ifdef IMU_ACTIVE
-    sensors_event_t a, g, temp;
-    mpu.getEvent(&a, &g, &temp);
-
-    tilt_x = g.gyro.x;
-    tilt_y = g.gyro.y;
-    rot_z = g.gyro.z;
+    mpu.update();
+    tilt_x = mpu.getAngleX();
+    tilt_y = mpu.getAngleY();
+    rot_z = mpu.getAngleZ();
+    temperature = mpu.getTemp();
 #endif
+}
+
+void imu_calibrate()
+{
+    mpu.calcGyroOffsets(false, 1000, 1000);
+    debug_message = "Calibrated IMU!";
 }

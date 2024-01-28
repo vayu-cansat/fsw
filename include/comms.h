@@ -1,6 +1,7 @@
 #pragma once
 #include <Arduino.h>
 #include "variables.h"
+#include "subsystems/imu.h"
 
 long int prev_millis;
 int offset = 0;
@@ -49,7 +50,7 @@ void start_comms()
 
 void comms_setup()
 {
-    _gpio_init(25);
+    gpio_init(25);
     gpio_set_dir(25, GPIO_OUT);
 
     gpio_put(25, 1);
@@ -80,7 +81,7 @@ void process(String cmd)
     }
     if (cmd == "CAL")
     {
-        // imu_calibrate();
+        imu_calibrate();
         debug_message = "IMU CALIBRATED";
         cmd_echo = cmd;
     }
@@ -213,15 +214,15 @@ void comms_loop()
     int interval = millis() - prev_millis;
     if (interval > (rate - abs(offset)))
     {
-        String dd = make_data_str() + "\n";
-        Serial.println(dd);
-        Serial.println(make_debug_str());
+        String dd = make_data_str() + "\n\r";
+        Serial.print(dd);
+        // Serial.println(make_debug_str());
 #ifdef COM_ACTIVE
         if (telemetry)
         {
             gpio_put(25, 1);
             packet_counter++;
-            Serial1.println(dd);
+            Serial1.print(dd);
             gpio_put(25, 0);
         }
 #endif

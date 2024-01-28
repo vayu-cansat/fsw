@@ -1,8 +1,7 @@
 #include <Arduino.h>
 #include <Adafruit_GPS.h>
 
-UART gps(p8, p9);
-Adafruit_GPS GPS(&gps);
+Adafruit_GPS GPS(&Serial2);
 
 #define GPSECHO false
 unsigned long gps_timer = millis();
@@ -21,6 +20,7 @@ String format_coords(double coord)
 void gps_setup()
 {
 #ifdef GPS_ACTIVE
+    Serial2.begin(9600);
     GPS.begin(9600);
     // uncomment this line to turn on RMC (recommended minimum) and GGA (fix data) including altitude
     GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
@@ -57,8 +57,10 @@ void gps_loop()
         {
             gps_sats = (int)GPS.satellites;
             gps_altitude = GPS.altitude;
-            gps_latitude = format_coords(GPS.latitude) + GPS.lat;
-            gps_longitude = format_coords(GPS.longitude) + GPS.lon;
+            // gps_latitude = format_coords(GPS.latitude) + GPS.lat;
+            // gps_longitude = format_coords(GPS.longitude) + GPS.lon;
+            gps_latitude = (String)GPS.latitudeDegrees;
+            gps_longitude = (String)GPS.longitudeDegrees;
             gps_time = "";
             if (GPS.hour < 10)
             {
@@ -75,6 +77,14 @@ void gps_loop()
                 gps_time += "0";
             }
             gps_time += (String)GPS.seconds;
+        }
+        else
+        {
+            gps_sats = 0;
+            gps_altitude = 0;
+            gps_latitude = "0.0";
+            gps_longitude = "0.0";
+            gps_time = "00:00:00";
         }
     }
 #endif

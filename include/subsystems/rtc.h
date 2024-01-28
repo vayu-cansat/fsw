@@ -29,6 +29,21 @@ void rtc_loop()
 {
 #ifdef RTC_ACTIVE
     DateTime now = rtc.now();
-    mission_time = (String)now.hour() + ":" + (String)now.minute() + ":" + (String)now.second();
+    mission_time = "";
+    if (now.hour() < 10)
+    {
+        mission_time += "0";
+    }
+    mission_time += (String)now.hour() + ":";
+    if (now.minute() < 10)
+    {
+        mission_time += "0";
+    }
+    mission_time += (String)now.minute() + ":";
+    if (now.second() < 10)
+    {
+        mission_time += "0";
+    }
+    mission_time += (String)now.second();
 #endif
 }
